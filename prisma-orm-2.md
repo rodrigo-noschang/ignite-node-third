@@ -86,3 +86,17 @@ O mesmo processo será feito para relacionar o checkin com as gyms, também 1:N.
 ```sh
     $ npx prisma migrate dev
 ```
+
+## Mostrando Logs no Prisma
+Para mostrar alguns logs no Prisma, podemos definir isso no momento da criação da instância do PrismaClient, que agora está sendo feita no `src/lib/prisma.ts`:
+
+```ts
+    import { env } from "@/env";
+    import { PrismaClient } from "@prisma/client";
+
+    export const prisma = new PrismaClient({
+        log: env.NODE_ENV === 'dev' ? ['query'] : []
+    });
+```
+
+Nesse caso, estamos pedindo o log das queries apenas no ambiente de desenvolvimento. Nos demais ambientes, vamos deixar os logs padrão do prisma que são, basicamente, os logs de erro. 
