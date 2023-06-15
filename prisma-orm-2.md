@@ -44,3 +44,45 @@ Para podermos criar nosso banco de dados, migrations, executar queries, agora pr
 ```
 
 Feito isso, em teoria, já podemos realizar algumas queries, que nesse momento não farão nada pois ainda não configuramos o banco em si.
+
+## Relacionamentos com Prisma
+Agora vamos criar as outras entidades que teremos na nossa aplicação, que são os **Checkins** e as **Gyms**. Na nossa aplicação, vamos começar estabelecendo uma relação 1:N entre os users e o checkins, ou seja, um user pode ter vários checkins. Para fazer isso, a extensão do prisma no VsCode nos ajuda bastante:
+
+Dentro da model do CheckIn, basta "definirmos uma coluna" chamada **user**, e colocar como tipo dela a nossa model **User**. Simplesmente digitando isso e salvando, como temos definido o prisma formatOnSave nas nossas configurações, o próprio prisma já vai estabelecer essa relação pra gente, gerando a seguinte relação:
+
+```
+    model User {
+        id            String   @id @default(uuid())
+        name          String
+        email         String   @unique
+        password_hash String   @default("")
+        created_at    DateTime @default(now())
+
+        checkIns CheckIn[]
+
+        @@map("users")
+    }
+
+    model CheckIn {
+        id           String    @id @default(uuid())
+        created_at   DateTime  @default(now())
+        validated_at DateTime?
+
+        user    User   @relation(fields: [user_id], references: [id])
+        user_id String
+
+        @@map("check_ins")
+    }
+```
+
+Veja, na model do CheckIn, que temos nosso **campo** user, do tipo User e que tem uma relação com essa model User. E fica definido aqui também que essa relação se dará pela **coluna** `user_id`, e ela fará referência ao `id` da model User. Concomitantemente vemos que na model User foi criado um **campo** Checkin, que vai possuir vários (um array) elementos do tipo da model CheckIn.
+
+Uma observação importante é a de que, no banco de dados de fato, somente serão criadas as colunas dos tipos primitivos do prisma (String, DateTime, Decimal, etc). Já os campos que definem relações com outras models não são transformados em colunas, esses servem apenas para referência do próprio prisma e para facilitar as relações no momento das queries. 
+
+Portanto, tomando como exemplo a model Checkin, o campo user_id, por ser do tipo String, será transformado em uma coluna do nosso banco de dados, já o campo user, que é do tipo User (outra model do nosso banco), não será transformado em coluna, mas é essencial para que o prisma entenda as relações que queremos definir. 
+
+O mesmo processo será feito para relacionar o checkin com as gyms, também 1:N. Depois de estabelecidas as relações, precisamos rodar as migrations **COM O CONTAINER RODANDO** para que o banco de dados as receba.
+
+```sh
+    $ npx prisma migrate dev
+```
