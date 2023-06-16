@@ -127,3 +127,41 @@ Como essa função gera um erro, vamos chamá-la dentro de um try/catch lá no n
 ```
 
 Essa é uma versão bastante introdutória e rudimentar desse pattern, mas já pode-se notar a ideia de separação de camadas. A ideia, aparentemente, é deixar nessa camada todos os processos não só de acesso ao banco de dados, como também TODAS as funções que devem ser realizadas antes desse determinado acesso ao banco de dados. Quase como se nós fôssemos definir manualmente algumas funções ou verificações "@default". Até mesmo por esse motivo que trouxemos o método de criptografia para essa camada pois, independente do meio em que a senha do usuário é enviada, ela PRECISA ser criptografada antes de ser inserida no banco de dados.
+
+Vamos fazer ainda mais uma separação nessa estrutura, que será a responsável por fazer EXCLUSIVAMENTE o acesso ao banco de dados, faremos os tal **repositories**
+
+## Repositories
+A ideia dos repositories é criar, a princípio, uma classe com métodos que servirão como uma porta de entrada para qualquer operação a ser feita no banco de dados (qualquer query). Portanto, todas as operações do banco de dados passarão por esses caras. No momento, a utilidade disso ainda não fica muito claro, mas tenhamos fé no Diegão.
+
+Uma das vantagens que já podemos destacar imediatamente é que se, futuramente, quisermos ou precisarmos mudar de banco de dados, ou mudar a forma que acessamos esse banco de dados, para um query builder, ou até mesmo driver nativo, fica muito mais fácil alterar apenas os repositórios, do que na aplicação inteira. Vamos implementar nosso primeiro repositório, para os Users, no arquivo `src/repositories/prisma-users-repository.ts`:
+
+```js
+    import { prisma } from "@/lib/prisma";
+    import { Prisma } from "@prisma/client";
+
+    export class PrismaUsersRepository {
+        async create(data: Prisma.UserCreateInput) {
+            const user = await prisma.user.create({
+                data
+            });
+
+            return user;
+        }
+    }
+```
+
+Aqui apenas criamos e exportamos uma classe com o nome do repositório para os Users, portanto, aqui estarão todos os métodos que fazem acesso ao banco de dados na tabela Users. No método create dessa classe, trazemos a query de inserção na tabela users, até aqui nada novo. O que mais chama atenção aqui é, certamente, a tipagem do `data`. Essa tipagem vem diretamente do client do Prisma, e é gerada automaticamente por ele baseado na modelagem que fizemos na nossa tabela. 
+
+Assim como existe uma tipagem para os dados de criação do usuário, também existe um tipo para praticamente todos os métodos CRUD nessa tabela, como o update (que é meio que o único método que precisa de um input tbm).
+
+Agora, no nosso register do `use-cases`, ao invés de inserir esses dados no db, vamos criar uma instância da classe do repositório, e aí então executar essa função:
+
+```ts
+    const prismaUsersRepository = new PrismaUsersRepository();
+
+    await prismaUsersRepository.create({
+        name,
+        email,
+        password_hash
+    })
+``` 
