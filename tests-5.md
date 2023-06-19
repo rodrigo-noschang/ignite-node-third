@@ -122,7 +122,7 @@ Agora vamos implementar o teste de email duplicado:
             password: '123456'
         })
 
-        expect(() => {
+        await expect(() => {
             registerUseCase.execute({
                 name: 'John Doe',
                 email,
@@ -133,3 +133,31 @@ Agora vamos implementar o teste de email duplicado:
 ```
 
 A lógica aqui é exatamente a mesma, o que é novo é a forma de testar se um **erro** está sendo gerado em uma ação que retorna uma Promise (uma ação assíncrona). Executamos a ação sem o await (precisamos pegar a promise e sua rejeição ou sucesso), esperamos que ela seja rejeitada com um erro do tipo **UserAlreadyExistsError**. 
+
+## Tests Coverage
+É interessante sempre saber se estamos testando tudo que precisamos testar na nossa aplicação, para isso podemos usar ferramentas de coverage. Vamos criar um script para ele e ver o que acontece:
+
+```json
+    {
+        "test:coverage": "vitest run --coverage"
+    }
+```
+
+Esse comando vai nos gerar um arquivo, na raiz do projeto, chamado `coverage`, dentro dessa pasta, temos um arquivo `index.html` que nos traz uma representação de quais arquivos estão sendo usados nos testes e, desses arquivos, quantas linhas estão sendo testadas, quantas vezes estão sendo executadas, etc. 
+
+É importante ressaltar que não é necessário que todos os arquivos tenham 100% de cobertura de testes, essa ferramenta só vai nos ajudar destacando quais partes do código eventualmente estarão sem testes e fica a nosso critério dizer se essas partes merecem ou não um teste para elas. 
+
+## Vitest UI:
+Também existe essa ferramenta que traz os testes de uma forma bem mais agradável de se ver, mas nenhuma informação FUNDAMENTAL a mais. Basta instalar ela:
+
+```sh
+    $ npm i -D @vitest/ui
+```
+
+E também criar um script pra ela:
+
+```json
+    { 
+        "test:ui": "vitest--ui"
+    }
+```
