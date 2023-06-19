@@ -2,9 +2,9 @@ import { compare } from 'bcryptjs';
 import { describe, it, expect } from 'vitest';
 
 import { RegisterUseCase } from './register';
-import { InMemoryUsersRepository } from '@/repositories/prisma/in-memory/in-memory-users-repository';
+import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository';
 
-import { UserAlreadyExistsError } from '@/errors/user-already-exists-error';
+import { UserAlreadyExistsError } from '@/http/use-cases/errors/user-already-exists-error';
 
 describe('Register Use Case', () => {
     it('should be able to register', async () => {
