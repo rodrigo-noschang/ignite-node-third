@@ -211,3 +211,5 @@ Agora, dentro do nosso método de busca (o **find**) vamos converter as datas de
 ```
 
 Rodando os testes agora, tudo deve passar. 
+
+Uma próxima regra de negócio que os checkins devem seguir é o usuário estar a no máximo 100m de distância da academia para poder realizar ele. Para isso, teremos que implementar os dados de distância (latitude e longitude) da própria academia.
