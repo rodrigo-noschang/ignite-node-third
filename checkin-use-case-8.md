@@ -71,3 +71,115 @@ Nosso repositório em memória também será bastante simples, e não aplicará 
         }
     }
 ```
+
+**Ver arquivo tdd-9.md**
+
+## Vitest - Mocking
+O **Mocking** nada mais é do que criar dados fictícios com o propósito de garantir um funcionamento/valor específico para os nossos testes. As funcionalidades do Mocking são várias, mas nesse caso em específico vamos usá-lo para gerar nossas datas de checkin de forma segura. Dentro do nosso `beforeEach`, vamos incluir uma funcionalidade de **vi.useFakeTimers()** (vi é importado do vitest também). Isso vai permitir que todos os nossos testes, modifiquem a data atual do "sistema" que está rodando os testes. 
+
+No nosso teste que verifica a duplicidade de check-ins no mesmo dia, vamos definir uma data para esse sistema que roda os testes:
+
+```js
+    it('should not be able to check in twice in the same day', async () => {
+        vi.setSystemTime(new Date(2022, 0, 12, 8, 0, 0)); // Modifica a data do sistema
+
+        await sut.execute({
+            userId: 'user-01',
+            gymId: 'gym-01'
+        })
+
+        await expect(() => {
+            return sut.execute({
+                userId: 'user-01',
+                gymId: 'gym-01'
+            })
+        }).rejects.toBeInstanceOf(Error)
+    })
+```
+
+Estamos definindo essa data do sistema para 12 de janeiro de 2022 às 8h da manhã. Dessa forma, quando o caso de uso rodar um `new Date()` na criação de check in, vai pegar essa data definida ao invés da data real do dia em que o teste estiver sendo executado. Depois, para garantir que essa configuração não vai alterar outros testes, é interessante incluir um **afterEach** que volta os timers para o tempo real:
+
+```js
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+```
+
+## De red para green
+Voltando para a verificação da regra de negócio que proíbe 2 checkins do mesmo usuário no mesmo dia:
+Já temos um teste que faz essa verificação e está falhando quando tentamos fazer 2 logins, e ele está falhando porque no teste esperamos que essa ação gere um erro, mas como esse não foi criado ainda, o teste está falhando pois essa promise não está sendo rejeitada.
+
+Nosso próximo passo agora, é escrever código o suficiente para para fazer esse teste passar, mas vamos propositalmente fazer ele passar de uma maneira duvidosa. Vamos criar um método no nosso repositório que vai verificar se já existe um checkin daquele usuário naquele mesmo dia:
+
+```js
+    export interface CheckInsRepository {
+        create(data: Prisma.CheckInUncheckedCreateInput): Promise<CheckIn>
+        findUserByIdOnSpecificDate(userId: string, date: Date): Promise<CheckIn | null>
+    }
+```
+
+Agora, vamos propositalmente criar uma verificação "burra", onde vamos ver apenas se existe um checkin com aquele id de usuário, sem fazer verificação de data:
+
+```js
+    // No InMemoryCheckInsRepository
+
+    async findUserByIdOnSpecificDate(userId: string, date: Date) {
+        const checkInOnSameDateBySameUser = this.items.find(item => {
+            return item.user_id === userId
+        });
+
+        if (!checkInOnSameDateBySameUser) return null;
+
+        return checkInOnSameDateBySameUser;
+    }
+```
+
+E agora, no nosso use case, antes de realizar a criação de um novo checkin, vamos primeiro utilizar esse método acima para ver se já existe um check-in desse usuário, naquela mesma data. Relembrando que, por enquanto, não estamos fazendo verificação sobre a data, apenas o usuário:
+
+```js
+    // No CheckInUseCase
+
+    async execute({ userId, gymId }: CheckInUseCaseRequest): Promise<CheckInUseCaseResponse> {
+        const checkInOnSameDay = await this.checkInsRepository.findUserByIdOnSpecificDate(
+            userId,
+            new Date()
+        )
+
+        if (checkInOnSameDay) {
+            throw new Error();
+        }
+
+        const checkIn = await this.checkInsRepository.create({
+            user_id: userId,
+            gym_id: gymId
+        })
+
+        return { checkIn }
+    }
+```
+
+Rodando nossos testes agora, os testes passarão com sucesso, já que um erro está sendo gerado quando um mesmo usuário faz o checkin 2x. Mas ainda existe algo a ser explorado, como fizemos uma verificação limitada, sem levar em consideração a data, esse usuário JAMAIS conseguiria fazer 2 check-ins, mesmo que em dias diferentes. Dessa forma, já passamos com sucesso da etapa **red** para **green**.
+
+Agora, podemos tentar criar um teste que verifica justamente o que ficou faltando antes, se é possível fazer checkins em dias diferentes, e podemos usar o **vi.useFakeTimers**, em conjunto com o **vi.setSystemTime** para simular esses dias diferentes:
+
+```js
+    it('should be able to check in twice in different days', async () => {
+        vi.setSystemTime(new Date(2022, 0, 12, 8, 0, 0));
+        
+        await sut.execute({
+            userId: 'user-01',
+            gymId: 'gym-01'
+        })
+        
+        vi.setSystemTime(new Date(2022, 0, 13, 8, 0, 0));
+        
+        await expect(() => {
+            return sut.execute({
+                userId: 'user-01',
+                gymId: 'gym-01'
+            });
+        }).resolves.toBeTruthy();
+    })
+```
+
+E agora, conforme dito acima, nos testes falharão, indicando que nossa verificação de checkins no mesmo dia está errada. 
