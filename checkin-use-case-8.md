@@ -182,4 +182,32 @@ Agora, podemos tentar criar um teste que verifica justamente o que ficou faltand
     })
 ```
 
-E agora, conforme dito acima, nos testes falharão, indicando que nossa verificação de checkins no mesmo dia está errada. 
+E agora, conforme dito acima, os testes falharão, indicando que nossa verificação de checkins no mesmo dia está errada. Vamos implementar a verificação de data usando o **dayjs**:
+
+```sh
+    $ npm i dayjs
+```
+
+Agora vamos criar 2 instâncias do dayjs, uma representando o começo do dia em que queremos criar e checkin (12/01/2022 Às 00:00:00, por exemplo) e outra representando o final desse mesmo dia (12/01/2022 às 23:59:59). A ideia aqui é que possamos verificar se o dia dos nossos checkins estão entre essas duas datas geradas porque, se estiver, aquele checkin foi feito no mesmo dia e, se foi feito pelo mesmo usuário, precisamos interromper a operação.
+
+Agora, dentro do nosso método de busca (o **find**) vamos converter as datas de criação dos checkins em instâncias dayjs e ver se ele estão entre o intervalo definido pelas datas acima. O método fica:
+
+```js
+    async findUserByIdOnSpecificDate(userId: string, date: Date) {
+        const startOfDay = dayjs(date).startOf('date');
+        const endOfDay = dayjs(date).endOf('date');
+
+        const checkInOnSameDateBySameUser = this.items.find(item => {
+            const checkInDate = dayjs(item.created_at);
+            const isOnSameDate = checkInDate.isAfter(startOfDay) && checkInDate.isBefore(endOfDay);
+
+            return item.user_id === userId && isOnSameDate
+        });
+
+        if (!checkInOnSameDateBySameUser) return null;
+
+        return checkInOnSameDateBySameUser;
+    }
+```
+
+Rodando os testes agora, tudo deve passar. 

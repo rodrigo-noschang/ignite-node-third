@@ -58,6 +58,6 @@ describe('Check In Use Case', async () => {
             gymId: 'gym-01'
         });
 
-        expect(checkIn).toEqual(expect.any(String));
+        expect(checkIn.id).toEqual(expect.any(String));
     })
 })
