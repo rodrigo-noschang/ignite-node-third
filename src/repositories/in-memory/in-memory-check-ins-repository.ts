@@ -5,7 +5,24 @@ import { Prisma, CheckIn } from "@prisma/client";
 import { CheckInsRepository } from "../check-ins-repository";
 
 export class InMemoryCheckInsRepository implements CheckInsRepository {
-    private items: CheckIn[] = []
+    private items: CheckIn[] = [];
+
+    async countByUserId(userId: string) {
+        const checkInsCount = this.items.filter(checkin => {
+            return checkin.user_id === userId
+        }).length
+
+        return checkInsCount
+    }
+
+    async findManyByUserId(userId: string, page: number) {
+        const userCheckins = this.items.filter(checkin => {
+            return checkin.user_id === userId
+        })
+            .slice((page - 1) * 20, page * 20);
+
+        return userCheckins;
+    }
 
     async findUserByIdOnSpecificDate(userId: string, date: Date) {
         const startOfDay = dayjs(date).startOf('date');
