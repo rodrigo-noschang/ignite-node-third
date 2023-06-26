@@ -5,7 +5,28 @@ import { Prisma, CheckIn } from "@prisma/client";
 import { CheckInsRepository } from "../check-ins-repository";
 
 export class InMemoryCheckInsRepository implements CheckInsRepository {
-    private items: CheckIn[] = [];
+    public items: CheckIn[] = [];
+
+    async findById(id: string) {
+        const checkin = this.items.find(checkin => {
+            return checkin.id === id;
+        })
+
+        if (!checkin) return null;
+        return checkin;
+    }
+
+    async save(checkIn: CheckIn) {
+        const checkInIndex = this.items.findIndex(existingCheckin => {
+            return existingCheckin.id === checkIn.id;
+        })
+
+        if (checkInIndex >= 0) {
+            this.items[checkInIndex] = checkIn;
+        }
+
+        return checkIn;
+    }
 
     async countByUserId(userId: string) {
         const checkInsCount = this.items.filter(checkin => {
