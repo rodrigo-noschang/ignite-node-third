@@ -23,3 +23,41 @@ Basicamente chamamos o método (que é assíncrono), e fornecemos a string base 
         original         round 1                 round 2                                          round 6
 senha = "123456" ---> "das2aa89s7f" ---> "djalfihl2r8192fhjefh" ---> ... ---> "aois74u98rhfDQWG_ASDG#Qefsadfoiu2h3%(!@#fasdf@#)"
 ```
+
+## Comparando datas no Prisma
+Quando implementamos o repositório em memória do checkin, usamos a seguinte lógica para verificar se já existia um checkin feito naquele dia, usando o `dayjs`:
+
+```js
+    const startOfDay = dayjs(date).startOf('date');
+    const endOfDay = dayjs(date).endOf('date');
+
+    const checkInOnSameDateBySameUser = this.items.find(item => {
+        const checkInDate = dayjs(item.created_at);
+        const isOnSameDate = checkInDate.isAfter(startOfDay) && checkInDate.isBefore(endOfDay);
+
+        return item.user_id === userId && isOnSameDate
+    });
+```
+
+Agora on prisma podemos usar uma funcionalidade específica dele:
+
+```js
+    async findUserByIdOnSpecificDate(userId: string, date: Date) {
+        const startOfDay = dayjs(date).startOf('date');
+        const endOfDay = dayjs(date).endOf('date');
+
+        const checkIn = await prisma.checkIn.findFirst({
+            where: {
+                user_id: userId,
+                created_at: {
+                    gte: startOfDay.toDate(),
+                    lte: endOfDay.toDate()
+                }
+            }
+        })
+
+        return checkIn;
+    }
+```
+
+Podemos usar o **gte** (greater than ou equal, maior ou igual) e o **lte** (lower than or equal, menor ou igual).
