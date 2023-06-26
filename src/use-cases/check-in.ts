@@ -4,7 +4,7 @@ import { GymsRepository } from "@/repositories/gyms-repository";
 import { CheckInsRepository } from "@/repositories/check-ins-repository";
 
 import { ResourceNotFoundError } from "./errors/resource-not-found-error";
-import { getDistanceBetweenCoordinates } from "@/utils/get-distance-between-cooridnates";
+import { getDistanceBetweenCoordinates } from "@/utils/get-distance-between-coordinates";
 
 interface CheckInUseCaseRequest {
     userId: string
