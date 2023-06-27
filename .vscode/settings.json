@@ -6,8 +6,10 @@
         "dayjs",
         "Diegão",
         "fastify",
+        "middlewares",
         "mockado",
         "postgres",
+        "resetar",
         "tsup"
     ]
 }

@@ -79,10 +79,39 @@ Essa função **request.jwtVerify** faz duas coisas: (1) valida se o token exist
     import "@fastify/jwt"
 
     declare module "@fastify/jwt" {
-    interface FastifyJWT {
-        user: {
-        sub: string
+        interface FastifyJWT {
+            user: {
+            sub: string
+            }
         }
     }
+```
+
+## Middleware de verificação de JWT
+Como teremos várias rotas privadas, faz sentido isolarmos esse processo de verificação e validação de JWT em um middleware e usá-lo nessas rotas:
+`src/http/middleware/verify-jwt.ts`:
+
+```js
+    import { FastifyReply, FastifyRequest } from "fastify";
+
+    export async function verifyJWT(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            await request.jwtVerify();
+        } catch (error) {
+            return reply.status(401).send({
+                message: 'Unauthorized'
+            })
+        }
     }
+```
+
+Agora, nas rotas que quisermos invocar esse middleware, fazemos (`src/http/routes.ts`):
+
+```js
+export async function appRoutes(app: FastifyInstance) {
+    app.post('/users', register);
+    app.post('/sessions', authenticate);
+
+    app.get('/me', { onRequest: [verifyJWT] }, profile) // Aqui
+}
 ```
