@@ -61,3 +61,20 @@ Agora on prisma podemos usar uma funcionalidade específica dele:
 ```
 
 Podemos usar o **gte** (greater than ou equal, maior ou igual) e o **lte** (lower than or equal, menor ou igual).
+
+## Zod Refine
+Quando estamos validando alguns dados no **zod** e queremos aplicar validações que não são fornecidas por ele por padrão, podemos usar o método **refine**, e aplicar a nossa verificação em cima disso:
+
+```js
+    const createGymBodySchema = z.object({
+        title: z.string(),
+        description: z.string().nullable(),
+        phone: z.string().nullable(),
+        latitude: z.number().refine(value => {
+            return Math.abs(value) <= 90;
+        }),
+        longitude: z.number().refine(value => {
+            return Math.abs(value) <= 180
+        })
+    })
+```
