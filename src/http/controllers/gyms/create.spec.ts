@@ -20,7 +20,7 @@ describe('Create Gym Controller (e2e)', () => {
             .post('/gyms')
             .set('Authorization', `Bearer ${token}`)
             .send({
-                title: 'Javascritp Gym',
+                title: 'Javascript Gym',
                 description: 'Some gym',
                 phone: '9999999999',
                 latitude: -23.9118092,

@@ -106,3 +106,8 @@ Ou, podemos passar de um jeito ainda mais organizado, como uma nova "especifica�
         .set('Authorization', `Bearer ${token}`)
         .send();
 ```
+
+## Testes que dependem de outras rotas
+Se estivéssemos seguindo à risca a metodologia TDD, muito provavelmente, em algum momento, nos encontraríamos na situação onde precisaríamos executar uma segunda rota que ainda não havia sido criado. Por exemplo, para fazer um checkin, precisamos criar uma academia, e essa rota de criação de academia ainda não existe. 
+
+Nesses casos, é 100% válido fazer a criação dessa academia direto pelo ORM, dispensando o uso da rota, mas essa prática traz consigo suas limitações: Caso a tabela mude, por exemplo, seria necessário reajustar todas as criações. Por isso é importante substituir esse método pelas rotas assim que possível. Vamos fazer isso teste de criação de checkins, por exemplo. 

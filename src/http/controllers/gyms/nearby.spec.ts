@@ -3,7 +3,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { createAndAuthenticateUser } from '@/utils/test/create-and-authenticate-user';
 
-describe('Nearby Controller (e2e)', () => {
+describe('Nearby Gyms Controller (e2e)', () => {
     beforeAll(async () => {
         await app.ready();
     })
