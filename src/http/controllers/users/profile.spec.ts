@@ -1,5 +1,5 @@
 import { app } from '@/app';
-import exp from 'constants';
+import { createAndAuthenticateUser } from '@/utils/test/create-and-authenticate-user';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 
@@ -14,22 +14,7 @@ describe('Profile Controller (e2e)', () => {
 
 
     it('should be able to get own profile', async () => {
-        await request(app.server)
-            .post('/users')
-            .send({
-                name: 'John Doe',
-                email: 'johndoe@mail.com',
-                password: '123456'
-            });
-
-        const response = await request(app.server)
-            .post('/sessions')
-            .send({
-                email: 'johndoe@mail.com',
-                password: '123456'
-            });
-
-        const { token } = response.body;
+        const { token } = await createAndAuthenticateUser(app);
 
         const profileResponse = await request(app.server)
             .get('/me')
