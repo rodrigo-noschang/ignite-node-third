@@ -52,8 +52,49 @@ Assim como definimos uma action para os testes unitários, vamos definir uma par
 Vamos criar esse workflow no arquivo `run-e2e-tests.yml`:
 
 ```yml
+name: Run E2E Tests
 
+on: [pull_request] # diff
+
+jobs:
+  run-e2e-tests:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+
+    services: # big diff start
+      postgres:
+        image: bitnami/postgresql
+        ports:
+          - 5432:5432
+        env:
+          POSTGRESQL_USERNAME: docker
+          POSTGRESQL_PASSWORD: docker
+          POSTGRESQL_DATABASE: ignite-gympass # big diff end
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          version: 18
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run test:e2e # diff
+        env:
+          JWT_SECRET: testing-jwt-secret
+          DATABASE_URL: "postgresql://docker:docker@localhost:5432/ignite-gympass?schema=public"
 ```
+
+Aqui a coisa já mudou um pouco de figura: Se ignorarmos a parte do **service** desse arquivo, todo o resto desse workflow é bastante parecido com o dos testes unitários. Algumas diferenças facilmente notáveis são:
+
+- **on**: Agora esse nosso workflow só vai rodar quando houver um pull request, não mais quando houver um push;
+- **run: npm run test:e2e**: Obviamente esse comando mudaria porque agora queremos rodar os testes e2e, e não mais os testes unitários. Mas além disso, nossos testes e2e, por fazerem uso de outros recursos da aplicação, como banco de dados e autenticação de usuários, precisamos informar para eles as variáveis de ambiente que elas vão precisar usar.  
+
+    Nessas variáveis de ambiente, passamos um segredo aleatório para a geração do jwt, e também precisamos passar a url de um banco de dados. Como nosso banco de dados está sendo criado via docker, também precisamos replicar a criação desse serviço docker aqui nesse workflow. É importante reparar que o jeito de informar variáveis de ambiente aqui nos workflows é diferente do jeito do docker-compose. 
+
+Feitas essas alterações, podemos agora simular um pull request ao criar uma outra branch, subi-la para o nosso repositório e criar um pull request, isso já vai ser o suficiente para rodar os os testes e2e, além, claro dos unitários.
 
 # CD - Continuous Deploy/Delivery
 Já o **CD** é o processo de realizar o deploy do projeto sempre que uma nova pull request for aceita, por exemplo. 
