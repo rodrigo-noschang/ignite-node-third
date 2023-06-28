@@ -17,7 +17,7 @@ Vamos criar a seguinte estrutura de pastas: `~/.github/workflows`. Dentro dessa 
         runs-on: ubuntu-latest
 
         steps:
-        - uses: action/checkout@v3
+        - uses: actions/checkout@v3
 
         - uses: actions/setup-node@v3
             with:
