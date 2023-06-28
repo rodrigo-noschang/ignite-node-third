@@ -10,6 +10,7 @@
         "middlewares",
         "mockado",
         "postgres",
+        "POSTGRESQL",
         "resetar",
         "tsup"
     ]
